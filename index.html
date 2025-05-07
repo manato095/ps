@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>数値暗号化ツール</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input, button { font-size: 1em; margin: 5px 0; }
+        .result { margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>6桁数値 暗号化・復号化ツール</h1>
+
+    <label for="inputNumber">元の数値（最大6桁）:</label><br>
+    <input type="number" id="inputNumber" maxlength="6"><br>
+
+    <button onclick="encrypt()">暗号化</button>
+    <button onclick="decrypt()">復号化</button>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        const encodeTable = {
+            1: [5,6,7,8,9,1,2,3,4],
+            10: [5,6,7,8,9,1,2,3,4],
+            100: [3,4,5,6,7,8,9,1,2],
+            1000: [3,4,5,6,7,8,9,1,2],
+            10000: [2,3,4,5,6,7,8,9,1],
+            100000: [4,5,6,7,8,9,1,2,3],
+        };
+
+        const decodeTable = {};
+        for (let place in encodeTable) {
+            decodeTable[place] = {};
+            encodeTable[place].forEach((val, i) => {
+                decodeTable[place][val] = i + 1;
+            });
+        }
+
+        function encrypt() {
+            const num = document.getElementById("inputNumber").value.padStart(6, "0");
+            let result = "";
+
+            for (let i = 0; i < 6; i++) {
+                const digit = parseInt(num[i]);
+                const place = Math.pow(10, 5 - i);
+
+                if (digit === 0) {
+                    result += "0";
+                } else {
+                    result += encodeTable[place][digit - 1];
+                }
+            }
+
+            document.getElementById("result").innerText = "暗号化結果: " + result;
+        }
+
+        function decrypt() {
+            const num = document.getElementById("inputNumber").value.padStart(6, "0");
+            let result = "";
+
+            for (let i = 0; i < 6; i++) {
+                const digit = parseInt(num[i]);
+                const place = Math.pow(10, 5 - i);
+
+                if (digit === 0) {
+                    result += "0";
+                } else {
+                    result += decodeTable[place][digit];
+                }
+            }
+
+            document.getElementById("result").innerText = "復号化結果: " + result;
+        }
+    </script>
+</body>
+</html>
