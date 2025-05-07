@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>買取価格暗号化ツール</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        textarea, input, button { font-size: 1em; margin: 5px 0; width: 100%; }
+        .result, .ocr-log { margin-top: 10px; font-weight: bold; white-space: pre-line; }
+    </style>
+</head>
+<body>
+    <h1>買取価格暗号化ツール</h1>
+
+    <button onclick="pasteFromClipboard()">クリップボードから読み込み</button><br><br>
+
+    <label>数値を入力（1行に1つ）：</label><br>
+    <textarea id="inputNumbers" rows="6" placeholder="例：348291\n123456"></textarea><br>
+
+    <button onclick="processEncrypt()">暗号化</button>
+    <button onclick="processDecrypt()">買取価格</button>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        const encodeTable = {
+            1: [5,6,7,8,9,1,2,3,4],
+            10: [5,6,7,8,9,1,2,3,4],
+            100: [3,4,5,6,7,8,9,1,2],
+            1000: [3,4,5,6,7,8,9,1,2],
+            10000: [2,3,4,5,6,7,8,9,1],
+            100000: [4,5,6,7,8,9,1,2,3],
+        };
+
+        const decodeTable = {};
+        for (let place in encodeTable) {
+            decodeTable[place] = {};
+            encodeTable[place].forEach((val, i) => {
+                decodeTable[place][val] = i + 1;
+            });
+        }
+
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const numbers = text.match(/\d{3,6}/g) || [];
+                const formatted = numbers.map(n => n.padStart(6, '0')).join('\n');
+                document.getElementById("inputNumbers").value = formatted;
+                alert("クリップボードから読み込みました。");
+            } catch (err) {
+                alert("クリップボードの読み取りに失敗しました：\n" + err);
+            }
+        }
+
+        function encrypt(number) {
+            let num = number.toString().padStart(6, "0");
+            let result = "";
+            for (let i = 0; i < 6; i++) {
+                const digit = parseInt(num[i]);
+                const place = Math.pow(10, 5 - i);
+                result += digit === 0 ? "0" : encodeTable[place][digit - 1];
+            }
+            return result;
+        }
+
+        function decrypt(number) {
+            let num = number.toString().padStart(6, "0");
+            let result = "";
+            for (let i = 0; i < 6; i++) {
+                const digit = parseInt(num[i]);
+                const place = Math.pow(10, 5 - i);
+                result += digit === 0 ? "0" : decodeTable[place][digit];
+            }
+            return parseInt(result, 10) + "円";
+        }
+
+        function processEncrypt() {
+            const input = document.getElementById("inputNumbers").value.split(/\s+/);
+            const output = input.map(line => line.trim()).filter(Boolean).map(n => encrypt(n));
+            document.getElementById("result").innerText = "暗号化結果：\n" + output.join("\n");
+        }
+
+        function processDecrypt() {
+            const input = document.getElementById("inputNumbers").value.split(/\s+/);
+            const output = input.map(line => line.trim()).filter(Boolean).map(n => decrypt(n));
+            document.getElementById("result").innerText = "買取価格：\n" + output.join("\n");
+        }
+    </script>
+</body>
+</html>
